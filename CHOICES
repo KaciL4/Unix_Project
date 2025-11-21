@@ -1,0 +1,14 @@
+display:
+  clock: true
+  weather: true
+  calendar: false
+  news: true
+  system_stats: false
+
+system:
+  brightness: 80
+  refresh_rate_seconds: 60
+
+location:
+  city: "Montreal"
+  units: "metric"
