@@ -1,14 +1,28 @@
-display:
-  clock: true
-  weather: true
-  calendar: false
-  news: true
-  system_stats: false
+# Choosing a platform
 
-system:
-  brightness: 80
-  refresh_rate_seconds: 60
+We chose to use a Raspberry Pi instead of a Virtual Machine because it's more efficient, uses less power, and it makes the project feel like a real embedded system. 
+Although a Virtual Machine is easier to test and fast to reset it something breaks, a Raspberry Pi is more realistic for a physical smart mirror.
 
-location:
-  city: "Montreal"
-  units: "metric"
+# Distribution Options
+
+We picked Raspberry Pi OS with Desktop since it gives us a GUI for debugging the display and Chromium kiosk is easier to configure.
+Pi OS Lite is lightweght but it would require more manual setup.
+
+# Autostart Method
+
+We chose to use a systemd service since .bashrc only works after login, so it's not reliable, amd cron doesn't restart on crash. 
+A systemd is cleaner, it handles auto-restart, and logs errors. so it's the most professional and stable way.
+
+# Display Software
+
+We're planning to use a Python script that will generate a local HTML page displayed in Chromium Kiosk mode. 
+This gives us full control, and Kiosk mode is easy to autostart. We will also use JavaScript to dynamically update the interface with the data fetched from the backend.
+
+# Task Automating
+
+For automations, we are using bash for system tasks, and Python for logic. 
+Tasks like updates and cleanup are easier in bash, while others lie APIs, time, weather, are easier in Python.
+
+# Scheduling
+
+We're using cron because it's simple and fits our case (e.g., refresh weather every hour).
