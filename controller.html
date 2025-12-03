@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SmartMirror Controller</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 12px; }
+    button { font-size: 18px; padding: 12px; margin: 6px; width: calc(50% - 16px); }
+    .row { display:flex; flex-wrap:wrap; }
+    input { font-size:16px; padding:12px; width:100%; box-sizing:border-box; margin-top:8px; }
+  </style>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <h2>SmartMirror Controller</h2>
+  <div class="row">
+    <button onclick="toggleDisplay()" id="powerBtn" style="width: calc(100% - 12px);">Turn Off Display</button>
+  </div>
+  <div class="row">
+    <button onclick="showWeather()">Show Weather</button>
+    <button onclick="showCalendar()">Show Calendar</button>
+    <button onclick="resetDisplay()">Reset Display</button>
+    <button onclick="manageBrightness()">Brightness</button>
+  </div>
+
+  <div class="message" style="margin-top:16px;">
+    <label>Broadcast message:</label>
+    <input id="msg" placeholder="Type a message to show on the mirror">
+    <button onclick="showMessage()">Send</button>
+    <button onclick="removeMessage()">Remove</button>
+  </div>
+
+<script>
+  const socket = io();
+
+  let displayOn = false;
+
+  socket.on('state_update', (state) => {
+    displayOn = state.display_on;
+    updatePowerButton();
+  });
+
+  function updatePowerButton(){
+    const btn = document.getElementById('powerBtn');
+    btn.textContent = displayOn ? 'Turn Off Display' : 'Turn On Display'
+    btn.style.backgroundColor = displayOn ? '#A52A2A' : '#4CAF50'
+  }
+  function toggleDisplay(){
+    fetch('/api/toggle_display', { method: 'POST' });
+  }
+
+  function resetDisplay(){
+    fetch('/api/set_view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ view: 'home' })
+    });
+  }
+
+  function showWeather() {
+    fetch('/api/fetch_weather', { method: 'POST' });
+  }
+
+  function showCalendar(){
+    fetch('/api/fetch_calendar', { method: 'POST' });
+  }
+
+  function manageBrightness() {
+    fetch('/api/set_view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ view: 'brightness' })
+    });
+  }
+
+  function showMessage() {
+     const m = document.getElementById('msg').value;
+     fetch('/api/set_message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: m })
+      });
+    }
+
+    function removeMessage(){
+      fetch('/api/remove_message', { method: 'POST' });
+    document.getElementById('msg').value = '';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SmartMirror Display</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+     <style>
+    body {
+      background: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 20%;
+      font-size: 25px;
+      transition: opacity 0.3s ease;
+    }
+    body.off {
+      opacity: 0;
+    }
+    .weather-display {
+      margin-top: 40px;
+    }
+    .weather-temp {
+      font-size: 60px;
+      font-weight: bold;
+    }
+    .weather-icon {
+      width: 100px;
+      height: 100px;
+    }
+    .calendar-display {
+      margin-top: 40px;
+      text-align: left;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .event-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    .event-date {
+      font-size: 18px;
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .event-title {
+      font-size: 24px;
+      margin: 5px 0;
+    }
+    .clock-display {
+      text-align: center;
+    }
+    .time {
+      font-size: 120px;
+      font-weight: 300;
+      letter-spacing: -5px;
+      margin: 20px 0;
+    }
+    .date {
+      font-size: 40px;
+      font-weight: 300;
+      color: #ccc;
+      margin: 10px 0;
+    }
+    .day {
+      font-size: 28px;
+      color: #999;
+      }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="homeView" class="clock-display">
+   <!-- <h1>View: <span id="view">home</span></h1>-->
+    <div class="time" id="clock">00:00</div>
+    <div class="date" id="date">January 1, 2025</div>
+    <div class="day" id="day">Monday</div>
+    <h2>Message: <span id="message"></span></h2>
+  </div>
+
+  <div id="weatherView" class="hidden weather-display">
+  <!--<h1>View: <span id="view">weather</span></h1>-->
+    <h2 id="weatherCity"></h2>
+    <div class="weather-temp"><span id="weatherTemp"></span>°C</div>
+    <div style="font-size: 30px; margin: 20px 0;" id="weatherDesc"></div>
+    <div style="font-size: 20px;">
+      Feels like: <span id="weatherFeels"></span>°C | Humidity: <span id="weatherHumidity"></span>%
+    </div>
+  </div>
+
+   <div id="calendarView" class="hidden calendar-display">
+   <!--<h1>View: <span id="view">calendar</span></h1>-->
+    <h2>Upcoming Events</h2>
+    <div id="calendarEvents"></div>
+  </div>
+
+  <script>
+    // Connect to the backend via Socket.IO
+    const socket = io();
+
+    // Listen for updates
+    socket.on('state_update', (state) => {
+      // document.getElementById('view').textContent = state.view;
+      document.getElementById('message').textContent = state.message;
+
+      // Toggle display on/off
+      if (state.display_on) {
+        document.body.classList.remove('off');
+      } else {
+        document.body.classList.add('off');
+      }
+
+      // Show appropriate view
+      const homeView = document.getElementById('homeView');
+      const weatherView = document.getElementById('weatherView');
+      const calendarView = document.getElementById('calendarView');
+
+      // Hide all views first
+      homeView.classList.add('hidden');
+      weatherView.classList.add('hidden');
+      calendarView.classList.add('hidden');
+
+
+      if (state.view === 'weather' && state.weather) {
+        weatherView.classList.remove('hidden');
+
+        // Update weather data
+        if (state.weather.error) {
+          document.getElementById('weatherCity').textContent = 'Error loading weather';
+          document.getElementById('weatherDesc').textContent = state.weather.error;
+        } else {
+          document.getElementById('weatherCity').textContent = state.weather.city;
+          document.getElementById('weatherTemp').textContent = state.weather.temp;
+          document.getElementById('weatherDesc').textContent = state.weather.description;
+          document.getElementById('weatherFeels').textContent = state.weather.feels_like;
+          document.getElementById('weatherHumidity').textContent = state.weather.humidity;
+        }
+      } else if (state.view === 'calendar' && state.calendar) {
+        calendarView.classList.remove('hidden');
+
+        // Update calendar data
+        const eventsContainer = document.getElementById('calendarEvents');
+        if (state.calendar.error) {
+          eventsContainer.innerHTML = '<p>Error loading calendar: ' + state.calendar.error + '</p>';
+        } else if (state.calendar.events && state.calendar.events.length > 0) {
+          let html = '';
+          state.calendar.events.forEach(event => {
+            html += `
+              <div class="event-item">
+                <div class="event-date">${event.date} ${event.time !== 'All day' ? '- ' + event.time : '(All day)'}</div>
+                <div class="event-title">${event.title}</div>
+              </div>
+            `;
+          });
+          eventsContainer.innerHTML = html;
+        } else {
+          eventsContainer.innerHTML = '<p>No upcoming events</p>';
+        }
+      } else {
+        homeView.classList.remove('hidden');
+      }
+    });
+  </script>
+  <script>
+  function updateClock() {
+    const now = new Date();
+
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+
+    // Format (e.g., 08:05)
+    hours = hours.toString().padStart(2, '0');
+    minutes = minutes.toString().padStart(2, '0');
+
+    document.getElementById('clock').textContent = `${hours}:${minutes}`;
+
+    // Format date
+    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('date').textContent = now.toLocaleDateString(undefined, dateOptions);
+
+    // Day of week
+    const dayOptions = { weekday: 'long' };
+    document.getElementById('day').textContent = now.toLocaleDateString(undefined, dayOptions);
+  }
+
+  // Update immediately
+  updateClock();
+
+  // Update every second
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
