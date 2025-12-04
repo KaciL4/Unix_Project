@@ -79,7 +79,8 @@
     <div class="time" id="clock">00:00</div>
     <div class="date" id="date">January 1, 2025</div>
     <div class="day" id="day">Monday</div>
-    <h2>Message: <span id="message"></span></h2>
+    <br>
+    <span id="message"></span>
   </div>
 
   <div id="weatherView" class="hidden weather-display">
@@ -89,6 +90,7 @@
     <div style="font-size: 30px; margin: 20px 0;" id="weatherDesc"></div>
     <div style="font-size: 20px;">
       Feels like: <span id="weatherFeels"></span>°C | Humidity: <span id="weatherHumidity"></span>%
+      <span id="message"></span>
     </div>
   </div>
 
@@ -96,7 +98,9 @@
    <!--<h1>View: <span id="view">calendar</span></h1>-->
     <h2>Upcoming Events</h2>
     <div id="calendarEvents"></div>
+    <span id="message"></span>
   </div>
+
 
   <script>
     // Connect to the backend via Socket.IO
@@ -104,7 +108,6 @@
 
     // Listen for updates
     socket.on('state_update', (state) => {
-      // document.getElementById('view').textContent = state.view;
       document.getElementById('message').textContent = state.message;
 
       // Toggle display on/off
@@ -112,6 +115,13 @@
         document.body.classList.remove('off');
       } else {
         document.body.classList.add('off');
+      }
+        // --- Brightness update ---
+      if (state.brightness !== undefined) {
+        // Expecting brightness to be 0–100
+        const percent = Math.min(100, Math.max(0, state.brightness));
+        // document.body.style.opacity = percent / 100;
+        document.body.style.filter = `brightness(${percent}%)`;
       }
 
       // Show appropriate view
@@ -141,7 +151,6 @@
         }
       } else if (state.view === 'calendar' && state.calendar) {
         calendarView.classList.remove('hidden');
-
         // Update calendar data
         const eventsContainer = document.getElementById('calendarEvents');
         if (state.calendar.error) {
@@ -186,7 +195,6 @@
     const dayOptions = { weekday: 'long' };
     document.getElementById('day').textContent = now.toLocaleDateString(undefined, dayOptions);
   }
-
   // Update immediately
   updateClock();
 

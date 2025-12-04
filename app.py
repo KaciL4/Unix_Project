@@ -5,8 +5,6 @@ import os
 from datetime import datetime, timedelta
 from icalendar import Calendar
 
-print("Starting SmartMirror Application...")
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'change-me'
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
@@ -15,7 +13,7 @@ DEFAULT_LAT =  45.5017
 DEFAULT_LON = -73.5673
 DEFAULT_CITY = "Montreal"
 
-state = {'view': 'home', 'message': '', 'display_on': False, 'weather': None, 'calendar':None}
+state = {'view': 'home', 'message': '', 'display_on': False, 'brightness': 100, 'weather': None, 'calendar':None}
 
 @app.route('/')
 def index():
@@ -140,6 +138,15 @@ def on_fetch_weather(data=None):
 	state['weather'] = weather_data
 	socketio.emit('state_update', state)
 
+@app.route('/api/fetch_calendar', methods=['POST'])
+def api_fetch_calendar():
+	calendar_data = fetch_calendar()
+	state['calendar'] = calendar_data
+	state['view'] = 'calendar'
+	socketio.emit('state_update', state)
+	return jsonify({'ok': True, 'calendar': calendar_data})
+
+
 CALENDAR_URL = "https://www.officeholidays.com/ics/canada/quebec"
 
 def fetch_calendar(days_ahead=7):
@@ -184,13 +191,10 @@ def fetch_calendar(days_ahead=7):
 	except Exception as e:
 		return {'error': str(e)}
 
-@app.route('/api/fetch_calendar', methods=['POST'])
-def api_fetch_calendar():
-	calendar_data = fetch_calendar()
-	state['calendar'] = calendar_data
-	state['view'] = 'calendar'
+@socketio.on('set_brightness')
+def handle_brightness(data):
+	state['brightness'] = int(data['brightness'])
 	socketio.emit('state_update', state)
-	return jsonify({'ok': True, 'calendar': calendar_data})
 
 if __name__ == "__main__":
 	socketio.run(app, host='0.0.0.0', port=5000, debug=True)

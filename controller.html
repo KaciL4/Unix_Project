@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SmartMirror Controller</title>
   <style>
@@ -9,19 +9,24 @@
     button { font-size: 18px; padding: 12px; margin: 6px; width: calc(50% - 16px); }
     .row { display:flex; flex-wrap:wrap; }
     input { font-size:16px; padding:12px; width:100%; box-sizing:border-box; margin-top:8px; }
+    .brightness { margin-top: 16px; }
   </style>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
   <h2>SmartMirror Controller</h2>
+
   <div class="row">
-    <button onclick="toggleDisplay()" id="powerBtn" style="width: calc(100% - 12px);">Turn Off Display</button>
+    <button onclick="toggleDisplay()" id="powerBtn" style="width: calc(100% - 12px);">Turn On Display</button>
   </div>
+
   <div class="row">
     <button onclick="showWeather()">Show Weather</button>
     <button onclick="showCalendar()">Show Calendar</button>
-    <button onclick="resetDisplay()">Reset Display</button>
-    <button onclick="manageBrightness()">Brightness</button>
+  </div>
+
+  <div class="row">
+    <button onclick="resetDisplay()" style="width: calc(100% - 12px);">Reset Display</button>
   </div>
 
   <div class="message" style="margin-top:16px;">
@@ -31,23 +36,46 @@
     <button onclick="removeMessage()">Remove</button>
   </div>
 
+  <div class="brightness">
+    <h2>Brightness</h2>
+    <input type="range" id="brightness" min="0" max="100" value="100">
+    <span id="brightnessValue">100%</span>
+  </div>
+
 <script>
+  // single socket connection
   const socket = io();
+
+  const brightnessSlider = document.getElementById("brightness");
+  const brightnessValue = document.getElementById("brightnessValue");
+  const powerBtn = document.getElementById("powerBtn");
 
   let displayOn = false;
 
   socket.on('state_update', (state) => {
-    displayOn = state.display_on;
+    console.log("STATE_UPDATE received:", state);
+    displayOn = !!state.display_on;
     updatePowerButton();
+
+    // brightness safety checks
+    if (state.brightness !== undefined && brightnessSlider) {
+      brightnessSlider.value = state.brightness;
+      brightnessValue.textContent = state.brightness + "%";
+    }
   });
 
   function updatePowerButton(){
-    const btn = document.getElementById('powerBtn');
-    btn.textContent = displayOn ? 'Turn Off Display' : 'Turn On Display'
-    btn.style.backgroundColor = displayOn ? '#A52A2A' : '#4CAF50'
+    powerBtn.textContent = displayOn ? 'Turn Off Display' : 'Turn On Display';
+    powerBtn.style.backgroundColor = displayOn ? '#A52A2A' : '#4CAF50';
+    powerBtn.style.color = 'white';
   }
+
   function toggleDisplay(){
-    fetch('/api/toggle_display', { method: 'POST' });
+    console.log("toggleDisplay() called");
+    fetch('/api/toggle_display', { method: 'POST' })
+      .then(r => r.json())
+      .then(res => console.log('toggle result', res))
+      .catch(err => console.error('toggle error', err));
   }
 
   function resetDisplay(){
@@ -66,27 +94,32 @@
     fetch('/api/fetch_calendar', { method: 'POST' });
   }
 
-  function manageBrightness() {
-    fetch('/api/set_view', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ view: 'brightness' })
-    });
-  }
-
   function showMessage() {
      const m = document.getElementById('msg').value;
      fetch('/api/set_message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: m })
-      });
-    }
+     });
+  }
 
-    function removeMessage(){
-      fetch('/api/remove_message', { method: 'POST' });
+  function removeMessage(){
+    fetch('/api/remove_message', { method: 'POST' });
     document.getElementById('msg').value = '';
-    }
+  }
+
+  // slider behavior: instant updates while dragging
+  brightnessSlider.addEventListener("input", () => {
+    const value = Number(brightnessSlider.value);
+    brightnessValue.textContent = value + "%";
+    // emit to server; server will broadcast updated state_update
+    socket.emit("set_brightness", { brightness: value });
+  });
+
+  // safety
+  updatePowerButton();
+  brightnessValue.textContent = brightnessSlider.value + "%";
+
 </script>
 </body>
 </html>
