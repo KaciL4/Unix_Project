@@ -12,8 +12,10 @@ The goal of this project is to construct a fully functional, open-source Smart M
 ### 📝 Requirements
 - Raspberry Pi
 - Linux kernel to build the script and interface 
-- Screen
-- ...
+- Displayable screen
+- microSD card with Raspberry Pi Imager (download from https://www.raspberrypi.com/software/)
+- Connectors cable (e.g. HDMI cable) to connect the Raspberri Pi to the screen.
+
 ***
 ### 🛠️ Major technical solutions compared
 The smart mirror can be built with a Raspberry Pi connected to a small display monitor placed behind a two-way mirror. This project can be built with a virtual machine that has a Linux distribution installed to simulate the display. 
