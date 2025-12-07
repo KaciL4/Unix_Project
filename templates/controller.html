@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SmartMirror Controller</title>
+  
+  <!-- CSS styles for the controller UI -->
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: 12px;
+      background: #111;
+      color: white;
+    }
+    h2 { margin-top: 0; }
+    .row { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
+    button {
+      font-size: 18px;
+      padding: 12px;
+      margin: 6px;
+      flex: 1 1 calc(50% - 16px); /* buttons share row space */
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+    }
+    #powerBtn { flex: 1 1 100%; font-weight: bold; }
+    input[type=text], input[type=range] {
+      width: 100%;
+      font-size: 16px;
+      padding: 12px;
+      box-sizing: border-box;
+      margin-top: 8px;
+      border-radius: 5px;
+      border: none;
+    }
+    .brightness-display { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .status {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      background: #222;
+      font-size: 14px;
+      text-align: center;
+      z-index: 1000;
+    }
+  </style>
+
+  <!-- Load Socket.IO for real-time communication -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+  <h2>SmartMirror Controller</h2>
+
+  <!-- Connection status display -->
+  <div class="status" id="status">Connecting...</div>
+
+  <!-- Power control -->
+  <div class="row">
+    <button id="powerBtn" onclick="toggleDisplay()">Turn Off Display</button>
+  </div>
+
+  <!-- Module toggles -->
+  <div class="row">
+    <button id="weatherButton" onclick="toggleWeather()">Show Weather</button>
+    <button id="calendarButton" onclick="toggleCalendar()">Show Calendar</button>
+    <button onclick="resetDisplay()">Reset Display</button>
+  </div>
+
+  <!-- Message broadcasting -->
+  <div style="margin-top:16px;">
+    <label>Broadcast message:</label>
+    <input type="text" id="msg" placeholder="Type a message to show on the mirror">
+    <div class="row">
+      <button onclick="showMessage()">Send</button>
+      <button onclick="removeMessage()">Remove</button>
+    </div>
+  </div>
+
+  <!-- Brightness slider -->
+  <div style="margin-top:16px;">
+    <h2>Brightness</h2>
+    <div class="brightness-display">
+      <input type="range" id="brightness" min="0" max="100" value="100">
+      <span id="brightnessValue">100%</span>
+    </div>
+  </div>
+
+  <!-- Calendar URL input -->
+  <div class="calendar-section">
+    <input id="calendarUrl" type="text" placeholder="Paste ICS calendar URL here">
+    <button onclick="saveCalendarUrl()">Save</button>
+  </div>
+
+<script>
+  // --- Socket.IO setup ---
+  const socket = io();  // connect to the Flask backend
+  const brightnessSlider = document.getElementById("brightness");
+  const brightnessValue = document.getElementById("brightnessValue");
+  const powerBtn = document.getElementById("powerBtn");
+  const statusDiv = document.getElementById("status");
+
+  let displayOn = true;  // tracks current display state
+
+  // Connection events
+  socket.on('connect', () => {
+    console.log('Socket connected');
+    statusDiv.textContent = 'Connected';
+    statusDiv.style.background = '#1a4d1a';  // green for connected
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected');
+    statusDiv.textContent = 'Disconnected';
+    statusDiv.style.background = '#4d1a1a';  // red for disconnected
+  });
+
+  // Receive updates from server
+  socket.on('state_update', (state) => {
+    console.log("STATE_UPDATE received:", state);
+
+    // Update status bar
+    statusDiv.textContent = `Connected | Display: ${state.display_on ? 'ON' : 'OFF'} | Brightness: ${state.brightness}%`;
+    statusDiv.style.background = state.display_on ? '#1a4d1a' : '#4d4d1a';
+
+    displayOn = !!state.display_on;
+    updatePowerButton();
+
+    // Update brightness UI
+    if (state.brightness !== undefined && brightnessSlider) {
+      brightnessSlider.value = state.brightness;
+      brightnessValue.textContent = state.brightness + "%";
+    }
+
+    // Update module toggle buttons
+    if (state.weather) updateWeatherButton(!!state.weather.visible);
+    if (state.calendar) updateCalendarButton(!!state.calendar.visible);
+  });
+
+  // --- Helper functions for UI ---
+
+  function updatePowerButton() {
+    powerBtn.textContent = displayOn ? 'Turn Off Display' : 'Turn On Display';
+    powerBtn.style.backgroundColor = displayOn ? '#A52A2A' : '#4CAF50';
+    powerBtn.style.color = 'white';
+  }
+
+  function toggleDisplay() {
+    console.log("toggleDisplay() called");
+    fetch('/api/toggle_display', { method: 'POST' })
+      .then(r => r.json())
+      .then(res => {
+        console.log('toggle result', res);
+        statusDiv.textContent = `Display toggled: ${res.display_on ? 'ON' : 'OFF'}`;
+      })
+      .catch(err => {
+        console.error('toggle error', err);
+        statusDiv.textContent = 'Error: ' + err.message;
+        statusDiv.style.background = '#4d1a1a';
+      });
+  }
+
+  function resetDisplay() {
+    console.log("resetDisplay() called");
+    fetch('/api/set_view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ view: 'home' })
+    })
+    .then(r => r.json())
+    .then(res => {
+      console.log('reset result', res);
+      statusDiv.textContent = 'Display reset to home view';
+    })
+    .catch(err => console.error('reset error', err));
+  }
+
+  // --- Toggle weather and calendar ---
+  function toggleWeather() {
+    fetch('/api/toggle_weather', { method: 'POST' })
+      .then(r => r.json())
+      .then(res => {
+        if (!res.ok) return;
+        updateWeatherButton(res.visible);
+      })
+      .catch(err => console.error('toggle weather error', err));
+  }
+
+  function toggleCalendar() {
+    fetch('/api/toggle_calendar', { method: 'POST' })
+      .then(r => r.json())
+      .then(res => {
+        if (!res.ok) return;
+        updateCalendarButton(res.visible);
+      })
+      .catch(err => console.error('toggle calendar error', err));
+  }
+
+  // Update the toggle button text
+  function updateWeatherButton(visible) {
+    const btn = document.getElementById('weatherButton');
+    if (!btn) return;
+    btn.textContent = visible ? 'Hide Weather' : 'Show Weather';
+    btn.classList.toggle('active-toggle', visible);
+  }
+
+  function updateCalendarButton(visible) {
+    const btn = document.getElementById('calendarButton');
+    if (!btn) return;
+    btn.textContent = visible ? 'Hide Calendar' : 'Show Calendar';
+    btn.classList.toggle('active-toggle', visible);
+  }
+
+  // --- Calendar URL saving ---
+  function saveCalendarUrl() {
+    const url = document.getElementById('calendarUrl').value.trim();
+    if (!url) {
+      alert("Please paste a URL first");
+      return;
+    }
+
+    fetch('/api/set_calendar_url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.ok) {
+        document.getElementById('calendarUrl').value = "";
+        statusDiv.textContent = 'Calendar URL saved';
+        toggleCalendar(); // refresh calendar view
+      } else {
+        alert("Error: " + (res.error || "could not save URL"));
+      }
+    })
+    .catch(err => {
+      console.error('save calendar url error', err);
+      alert("Network error saving calendar URL");
+    });
+  }
+
+  // --- Messaging ---
+  function showMessage() {
+    const m = document.getElementById('msg').value;
+    console.log("showMessage() called with:", m);
+    fetch('/api/set_message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: m })
+    })
+    .then(r => r.json())
+    .then(res => {
+      console.log('message result', res);
+      statusDiv.textContent = 'Message sent';
+    })
+    .catch(err => console.error('message error', err));
+  }
+
+  function removeMessage() {
+    console.log("removeMessage() called");
+    fetch('/api/remove_message', { method: 'POST' })
+      .then(r => r.json())
+      .then(res => {
+        console.log('remove message result', res);
+        statusDiv.textContent = 'Message removed';
+      })
+      .catch(err => console.error('remove message error', err));
+    document.getElementById('msg').value = '';
+  }
+
+  // --- Brightness slider updates ---
+  brightnessSlider.addEventListener("input", () => {
+    const value = Number(brightnessSlider.value);
+    brightnessValue.textContent = value + "%";
+    // send updated brightness to server
+    socket.emit("set_brightness", { brightness: value });
+  });
+
+  // --- Auto send phone location to backend ---
+  window.addEventListener("load", () => {
+    if (!("geolocation" in navigator)) {
+      console.warn("Geolocation not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        console.log("Auto location:", lat, lon);
+        socket.emit("update_location", { lat, lon });
+      },
+      (err) => {
+        console.error("Location error:", err);
+        statusDiv.textContent = "Location error: " + err.message;
+        statusDiv.style.background = "#4d1a1a";
+      },
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 5000 }
+    );
+  });
+
+  // --- Initial setup ---
+  updatePowerButton();
+  brightnessValue.textContent = brightnessSlider.value + "%";
+</script>
+</body>
+</html>
