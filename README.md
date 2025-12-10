@@ -14,6 +14,7 @@ The goal of this project is to construct a fully functional, open-source Smart M
 - Linux kernel to build the script and interface 
 - Displayable screen
 - microSD card with Raspberry Pi Imager (download from https://www.raspberrypi.com/software/)
+- Power Supply for the Raspberry Pi
 - Connectors cable (e.g. HDMI cable) to connect the Raspberri Pi to the screen.
 - A two-side mirror glass or film
 ***
