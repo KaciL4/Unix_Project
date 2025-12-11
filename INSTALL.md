@@ -131,7 +131,7 @@ Paste:
  [Install]
  WantedBy=multi-user.target
 ```
-## 2. Enable service
+### 2. Enable service
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable smartmirror.service
