@@ -64,7 +64,7 @@ sudo apt update && sudo apt upgrade -y
 ```
 ## 2. Install Packages
 ```bash
-sudo apt install -y python3 python3-venv python3-pip git unclutter xdotool
+sudo apt install -y python3 python3-venv python3-pip   
 ```
 ***
 
@@ -123,7 +123,7 @@ Paste:
  After=network.target
  
  [Service]
- User=k4cl
+ User=<YOUR-USERNAME>
  WorkingDirectory=/home/<YOUR-USERNAME>/smartmirror
  ExecStart=/home/<YOUR-USERNAME>/smartmirror/venv/bin/python /home/<YOUR-USERNAME>/smartmirror/app.py
  Restart=always
@@ -213,7 +213,7 @@ ls ~/.config/autostart/
 
 ## If the backend is not running
 ```bash
-journalctl -u smartmirros.service -n 50 --no-pager
+journalctl -u smartmirror.service -n 50 --no-pager
 sudo systemctl restart smartmirror.service
 ```
 
