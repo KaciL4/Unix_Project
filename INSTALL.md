@@ -70,19 +70,19 @@ sudo apt install -y python3 python3-venv python3-pip
 
 # 📥 Phase 4: Clone the Smart Mirror Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/smartmirror.git
+git clone https://github.com/KaciL4/Unix_Project.git
 cd smartmirror
 ```
 ***
 
 # 🧪 Phase 5: Create Python Virtual Environment
 
-## 1. Create
+## 1. Create a virtual environment
 ```bash
 python3 -m venv venv
 ```
 
-## 2. Activate
+## 2. Activate it
 ```bash
 source venv/bin/activate
 ```
