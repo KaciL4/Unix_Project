@@ -54,6 +54,7 @@
   If you set up an account in the Imager, the screen will either go straight to the desktop or prompt you to log in with the username/password you chose.
   
   The Raspberry Pi is now successfully booted to the desktop, providing the necessary graphical environment (the GUI) to run your custom Chromium Kiosk smart mirror application.
+***
 
 # 🐍 Phase 3: Install Required Dependencies
 
@@ -65,12 +66,14 @@ sudo apt update && sudo apt upgrade -y
 ```bash
 sudo apt install -y python3 python3-venv python3-pip git unclutter xdotool
 ```
+***
 
 # 📥 Phase 4: Clone the Smart Mirror Repository
 ```bash
 git clone https://github.com/YOUR_USERNAME/smartmirror.git
 cd smartmirror
 ```
+***
 
 # 🧪 Phase 5: Create Python Virtual Environment
 
@@ -87,6 +90,8 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+***
+
 # ▶️ Phase 6: Test the App
 
 ## 1. Run
@@ -102,6 +107,7 @@ http://localhost:5000/display
 http://<PI-IP-ADDRESS>:5000/controller
 ```
 Press Ctrl + C in the terminal to exit.
+***
 
 # ⚙️ Phase 7: Create a systemd Service (Auto-Start Backend)
 
@@ -136,6 +142,7 @@ sudo systemctl start smartmirror.service
 ```bash
 sudo systemctl status smartmirror.service
 ```
+***
 
 # 🖥️ Phase 8: Set Up Chromium Kiosk Mode
 
@@ -178,6 +185,7 @@ Name=SmartMirror Kiosk
 Exec=/home/<YOUR-USERNAME>/start-kiosk.sh
 X-LXDE-Autostart-enabled=true
 ```
+***
 
 # ✨ Phase 9: Reboot and Verify
 
@@ -215,8 +223,9 @@ Ensure that both devices are on the same network and check the IP address:
 ```bash
 hostname -I
 ```
+***
 
-🎉 Installation Complete
+# 🎉 Installation Complete
 
 Your Smart Mirror now:
  - auto-launches on startup
