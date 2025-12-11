@@ -56,45 +56,45 @@
   The Raspberry Pi is now successfully booted to the desktop, providing the necessary graphical environment (the GUI) to run your custom Chromium Kiosk smart mirror application.
 ***
 
-# 🐍 Phase 3: Install Required Dependencies
+## 🐍 Phase 3: Install Required Dependencies
 
-## 1. Update System 🔄
+### 1. Update System 🔄
 ```bash
 sudo apt update && sudo apt upgrade -y
 ```
-## 2. Install Packages
+### 2. Install Packages
 ```bash
 sudo apt install -y python3 python3-venv python3-pip   
 ```
 ***
 
-# 📥 Phase 4: Clone the Smart Mirror Repository
+## 📥 Phase 4: Clone the Smart Mirror Repository
 ```bash
 git clone https://github.com/KaciL4/Unix_Project.git
 cd smartmirror
 ```
 ***
 
-# 🧪 Phase 5: Create Python Virtual Environment
+## 🧪 Phase 5: Create Python Virtual Environment
 
-## 1. Create a virtual environment
+### 1. Create a virtual environment
 ```bash
 python3 -m venv venv
 ```
 
-## 2. Activate it
+### 2. Activate it
 ```bash
 source venv/bin/activate
 ```
-## 3. Install dependencies
+### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 ***
 
-# ▶️ Phase 6: Test the App
+## ▶️ Phase 6: Test the App
 
-## 1. Run
+### 1. Run
 ```bash
 python app.py
 ```
@@ -102,16 +102,16 @@ python app.py
 ```bash
 http://localhost:5000/display
 ```
-## 3. On the same network, on your phone:
+### 3. On the same network, on your phone:
 ```bash
 http://<PI-IP-ADDRESS>:5000/controller
 ```
 Press Ctrl + C in the terminal to exit.
 ***
 
-# ⚙️ Phase 7: Create a systemd Service (Auto-Start Backend)
+## ⚙️ Phase 7: Create a systemd Service (Auto-Start Backend)
 
-## 1. Create service file
+### 1. Create service file
 ```bash
 sudo nano /etc/systemd/system/smartmirror.service
 ```
@@ -138,15 +138,15 @@ sudo systemctl enable smartmirror.service
 sudo systemctl start smartmirror.service
 ```
 
-## 3. Check Status
+### 3. Check Status
 ```bash
 sudo systemctl status smartmirror.service
 ```
 ***
 
-# 🖥️ Phase 8: Set Up Chromium Kiosk Mode
+## 🖥️ Phase 8: Set Up Chromium Kiosk Mode
 
-## 1. Create the kiosk script
+### 1. Create the kiosk script
 ```bash
 nano /home/<YOUR-USERNAME>/start-kiosk.sh
 ```
@@ -187,7 +187,7 @@ X-LXDE-Autostart-enabled=true
 ```
 ***
 
-# ✨ Phase 9: Reboot and Verify
+## ✨ Phase 9: Reboot and Verify
 
 ```bash
 sudo reboot
@@ -199,9 +199,9 @@ On boot, the Pi should:
  3. Run your kiosk script
  4. Show the Smart Mirror interface full screen
  
-# 🧯 Phase 10: Troubleshooting
+## 🧯 Phase 10: Troubleshooting
 
-## If the display remains blank:
+### If the display remains blank:
 ```bash
 chmod +x ~/start-kisok.sh
 ```
@@ -211,7 +211,7 @@ Check autostart:
 ls ~/.config/autostart/
 ```
 
-## If the backend is not running
+### If the backend is not running
 ```bash
 journalctl -u smartmirror.service -n 50 --no-pager
 sudo systemctl restart smartmirror.service
@@ -225,7 +225,7 @@ hostname -I
 ```
 ***
 
-# 🎉 Installation Complete
+## 🎉 Installation Complete
 
 Your Smart Mirror now:
  - auto-launches on startup
