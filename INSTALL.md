@@ -8,7 +8,7 @@
  - Computer: A Windows, macOS, or Linux machine to perform the flashing.
  - MicroSD Card Reader: To connect the card to your computer.
  - Raspberry Pi Imager Software: The official tool for installing the OS.
- - 
+   
 ### 2. Download and Install Raspberry Pi Imager 💾
 
   Go to the official Raspberry Pi website and download the Raspberry Pi Imager software for your computer's operating system (Windows, macOS, or Linux) and install it.
@@ -171,7 +171,7 @@ Make it executable:
 chmod +x /home/<YOUR-USERNAME>/start-kiosk.sh
 ```
 
-## 2. Create Autostart Entry
+### 2. Create Autostart Entry
 ```bash
 mkdir -p /home/<YOUR-USERNAME>/.config/autostart
 nano /home/<YOUR-USERNAME>/.config/autostart/smartmirror-kiosk.desktop
